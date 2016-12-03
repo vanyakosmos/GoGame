@@ -1,31 +1,34 @@
 from collections import namedtuple
 from copy import copy
+from enum import Enum
 
 from .matrix import Matrix, MatrixError
-from .location import Location
 
 
 class BoardError(Exception):
     pass
 
 
-class Board(Matrix):
-    BLACK = Location('black')
-    WHITE = Location('white')
-    EMPTY = Location('empty')
+class Cell(Enum):
+    BLACK = 'black'
+    WHITE = 'white'
+    EMPTY = 'empty'
 
-    TURNS = (BLACK, WHITE)
+
+class Board(Matrix):
+
+    TURNS = (Cell.BLACK, Cell.WHITE)
 
     State = namedtuple('State', ['board', 'turn', 'score'])
 
     def __init__(self, width):
-        super(Board, self).__init__(width, width, self.EMPTY)
+        super(Board, self).__init__(width, width, Cell.EMPTY)
 
-        self._turn = self.BLACK
+        self._turn = Cell.BLACK
 
         self._score = {
-            self.BLACK: 0,
-            self.WHITE: 0,
+            Cell.BLACK: 0,
+            Cell.WHITE: 0,
         }
 
         self._history = []
@@ -33,21 +36,21 @@ class Board(Matrix):
 
     @property
     def turn(self):
-        return repr(self._turn)
+        return self._turn
 
     @property
     def score(self):
         return {
-            'black': self._score[self.BLACK],
-            'white': self._score[self.WHITE],
+            'black': self._score[Cell.BLACK],
+            'white': self._score[Cell.WHITE],
         }
 
     @property
     def _next_turn(self):
-        return self.TURNS[self._turn is self.BLACK]
+        return self.TURNS[self._turn is Cell.BLACK]
 
     def move(self, x, y):
-        if self[x, y] is not self.EMPTY:
+        if self[x, y] is not Cell.EMPTY:
             raise BoardError('Cannot move on top of another piece!')
 
         self._push_history()
@@ -177,20 +180,20 @@ class Board(Matrix):
         score = len(group)
 
         for x1, y1 in group:
-            self[x1, y1] = self.EMPTY
+            self[x1, y1] = Cell.EMPTY
 
         return score
 
     def _get_liberties(self, x, y, traversed):
         loc = self[x, y]
 
-        if loc is self.EMPTY:
+        if loc is Cell.EMPTY:
             return {(x, y)}
         else:
             locations = [
                 (p, (a, b))
                 for p, (a, b) in self._get_surrounding(x, y)
-                if (p is loc or p is self.EMPTY) and (a, b) not in traversed
+                if (p is loc or p is Cell.EMPTY) and (a, b) not in traversed
             ]
 
             traversed.add((x, y))

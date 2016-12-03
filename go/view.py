@@ -1,18 +1,18 @@
 from tkinter import *
 
-from go.board import BoardError, Board
+from go.board import BoardError, Cell
 from go.matrix import Matrix
 
 
 class View(Matrix):
     TILE_SIZE = 3
 
-    TYPE = {Board.BLACK: {'bg': '#111111', 'relief': RAISED},
-            Board.WHITE: {'bg': '#eeeeee', 'relief': RAISED},
-            Board.EMPTY: {'bg': '#aaaaaa', 'relief': SUNKEN}}
+    TYPE = {Cell.BLACK: {'bg': '#111111', 'relief': RAISED},
+            Cell.WHITE: {'bg': '#eeeeee', 'relief': RAISED},
+            Cell.EMPTY: {'bg': '#aaaaaa', 'relief': SUNKEN}}
 
-    TURN = {'Black': {'bg': '#111111', 'fg': 'white', 'text': 'black\'s turn'},
-            'White': {'bg': '#eeeeee', 'fg': 'black', 'text': 'white\'s turn'}}
+    TURN = {Cell.BLACK: {'bg': '#111111', 'fg': 'white', 'text': 'black\'s turn'},
+            Cell.WHITE: {'bg': '#eeeeee', 'fg': 'black', 'text': 'white\'s turn'}}
 
     def __init__(self, root, board):
         super(View, self).__init__(board.width,
@@ -30,7 +30,7 @@ class View(Matrix):
                            **View.TURN[self._board.turn])
         self._turn.pack()
 
-        self._score = Label(root, text="Black: {black:4d}\t\t\t\tWhite: {white:4d}".format(**self._board.score),
+        self._score = Label(root, text=self.score,
                             padx=10, pady=10)
         self._score.pack()
 
@@ -45,7 +45,7 @@ class View(Matrix):
             self._board.move(x, y)
             self._err.config(text="")
             self._turn.config(**View.TURN[self._board.turn])
-            self._score.config(text="Black: {black}  ~  White: {white}".format(**self._board.score))
+            self._score.config(text=self.score)
             self._redraw()
         except BoardError as be:
             self._err.config(text=str(be))
@@ -59,3 +59,7 @@ class View(Matrix):
                          **View.TYPE[self._board[x + 1, y + 1]])
                 b.grid(row=y, column=x)
                 b.bind("<Button-1>", lambda event, i=x+1, j=y+1: self._callback(event, i, j))
+
+    @property
+    def score(self):
+        return "Black: {black:4d}\t\t\t\tWhite: {white:4d}".format(**self._board.score)
