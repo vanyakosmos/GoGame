@@ -1,18 +1,9 @@
 from collections import namedtuple
 from copy import copy
-from enum import Enum
 
-from .matrix import Matrix, MatrixError
-
-
-class BoardError(Exception):
-    pass
-
-
-class Cell(Enum):
-    BLACK = 'black'
-    WHITE = 'white'
-    EMPTY = 'empty'
+from go.matrix import Matrix, MatrixError
+from go.utils import Cell, BoardError
+from go.player import Player
 
 
 class Board(Matrix):
@@ -33,6 +24,8 @@ class Board(Matrix):
 
         self._history = []
         self._redo = []
+
+        self._ai = Player(self, level=False)
 
     @property
     def turn(self):
@@ -205,6 +198,25 @@ class Board(Matrix):
                 ])
             else:
                 return set()
+
+    def get_empty_valid_cells(self):
+        empty = []
+        for y, row in enumerate(self._matrix):
+            n_row = []
+            for x, e in enumerate(row):
+                if e == Cell.EMPTY:
+                    try:
+                        self.move(x+1, y+1)
+                        self._pop_history()
+                        n_row.append(x + 1)
+                    except BoardError:
+                        pass
+
+            empty.extend(zip(n_row, [y + 1] * len(n_row)))
+        return empty
+
+    def game_end(self):
+        return len(self.get_empty_valid_cells()) == 0
 
     def get_liberties(self, x, y):
         return self._get_liberties(x, y, set())
