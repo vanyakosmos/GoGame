@@ -33,14 +33,22 @@ class Board(Matrix):
 
     @property
     def score(self):
-        return {
-            'black': self._score[Cell.BLACK],
-            'white': self._score[Cell.WHITE],
-        }
+        # return {Cell.BLACK: self._score[Cell.BLACK], Cell.WHITE: self._score[Cell.WHITE]}
+        return self._calculate_score()
 
     @property
     def _next_turn(self):
         return self.TURNS[self._turn is Cell.BLACK]
+
+    def _calculate_score(self):
+        b, w = 0, 0
+        for row in self.matrix:
+            for e in row:
+                if e == Cell.BLACK:
+                    b += 1
+                elif e == Cell.WHITE:
+                    w += 1
+        return {Cell.BLACK: b, Cell.WHITE: w}
 
     def move(self, x, y):
         if self[x, y] is not Cell.EMPTY:
@@ -73,6 +81,9 @@ class Board(Matrix):
             pass
 
     def _take_pieces(self, x, y):
+        # group = self.get_group(x, y)
+        # curr_score = len(group)
+
         scores = []
         for p, (x1, y1) in self._get_surrounding(x, y):
             if p is self._next_turn and self.count_liberties(x1, y1) == 0:

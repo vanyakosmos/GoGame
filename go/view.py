@@ -2,6 +2,7 @@ from tkinter import *
 
 from go.board import BoardError, Cell
 from go.matrix import Matrix
+from time import sleep
 
 
 class View(Matrix):
@@ -14,11 +15,12 @@ class View(Matrix):
     TURN = {Cell.BLACK: {'bg': '#111111', 'fg': 'white', 'text': 'black\'s turn'},
             Cell.WHITE: {'bg': '#eeeeee', 'fg': 'black', 'text': 'white\'s turn'}}
 
-    def __init__(self, root, board, ai):
+    def __init__(self, root, board, p1, p2):
         super(View, self).__init__(board.width,
                                    board.height)
         self._board = board
-        self._ai = ai
+        self._p1 = p1
+        self._p2 = p2
 
         self._game_grid = Frame(root, padx=10, pady=10)
         self._game_grid.pack()
@@ -39,20 +41,33 @@ class View(Matrix):
                          for _ in range(self.height)]
                         for _ in range(self.width)]
 
+        if p1._lvl_id != 0 and p2._lvl_id != 0:
+            button = Button(root, text="Start bot battle", command=self._start_bot_battle)
+            button.pack()
+
         self._redraw()
+
+    def _start_bot_battle(self):
+        while True:
+            try:
+                self._player_turn(1, 1)
+                self._determine_winner()
+            except BoardError:
+                break
 
     def _callback(self, _, x, y):
         try:
             self._player_turn(x, y)
-            self._determine_winner()
-            self._ai_turn()
             self._determine_winner()
         except BoardError:
             pass
 
     def _player_turn(self, x, y):
         try:
-            self._board.move(x, y)
+            if self._board.turn == Cell.BLACK:
+                self._p1.move(x, y)
+            else:
+                self._p2.move(x, y)
             self._err.config(text="")
             self._turn.config(**View.TURN[self._board.turn])
             self._score.config(text=self.score)
@@ -61,23 +76,14 @@ class View(Matrix):
             self._err.config(text=str(be))
             raise be
 
-    def _ai_turn(self):
-        try:
-            self._ai.move()
-            self._turn.config(**View.TURN[self._board.turn])
-            self._score.config(text=self.score)
-            self._redraw()
-        except BoardError:
-            pass
-
     def _determine_winner(self):
         if self._board.game_end():
             self._err.config(text="")
             self._turn.config(bg="#f44242", fg='white')
-            if self._board.score['black'] > self._board.score['white']:
-                self._turn.config(text="YOU win against {}!".format(self._ai.type))
-            elif self._board.score['black'] < self._board.score['white']:
-                self._turn.config(text="{} wins!".format(str(self._ai.type).capitalize()))
+            if self._board.score[Cell.BLACK] > self._board.score[Cell.WHITE]:
+                self._turn.config(text="Player 1 (black) wins!")
+            elif self._board.score[Cell.BLACK] < self._board.score[Cell.WHITE]:
+                self._turn.config(text="Player 2 (white) wins!")
             else:
                 self._turn.config(text="Draw!")
             self._redraw(bind=False)
@@ -98,4 +104,4 @@ class View(Matrix):
 
     @property
     def score(self):
-        return "Black: {black:4d}\t\t\t\tWhite: {white:4d}".format(**self._board.score)
+        return "Black: {:4d}\t\t\t\tWhite: {:4d}".format(self._board.score[Cell.BLACK], self._board.score[Cell.WHITE])

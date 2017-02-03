@@ -11,16 +11,15 @@ from go.player import Player
 
 __author__ = "Bachynin Ivan"
 __copyright__ = "Copyright 2016"
-__version__ = "1.1"
+__version__ = "1.2"
 
-MIN = 7
+MIN = 3
 MAX = 19
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--size', type=int, default=7, help='size of board')
-    parser.add_argument('-b', '--bot', type=int, default=3, help='bot level')
 
     args = parser.parse_args()
 
@@ -35,8 +34,9 @@ def main():
     root.eval('tk::PlaceWindow %s center' % root.winfo_pathname(root.winfo_id()))
 
     board = Board(args.size)
-    ai = Player(board, level=args.bot)
-    View(root, board, ai)
+    p1 = Player(board, level=0)
+    p2 = Player(board, level=4)
+    View(root, board, p1, p2)
     root.mainloop()
 
 if __name__ == '__main__':
